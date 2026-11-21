@@ -59,7 +59,7 @@ footer .note a{cursor:pointer;text-decoration:underline}
 <section id="book"><h2>ระบบจองคิว</h2><ol class="steps" id="steps"></ol><div id="bk" style="margin-top:14px"></div></section>
 <section id="holSec" style="display:none"><h2>ตารางวันหยุด</h2><div id="holBox"></div></section>
 <section><h2>แพ็กเกจ & ราคา</h2><div class="gal" id="gal"></div><div class="pk" id="pk"></div></section>
-<section><h2>รีวิวจากลูกค้า</h2><div class="rv" id="rv"></div><button class="btn b review-more" id="reviewMore" style="display:none" type="button">ดูรีวิวเพิ่มเติม ↓</button>
+<section><h2>รีวิวจากลูกค้า</h2><div class="rv" id="rv"><div class="note">กำลังโหลดรีวิว...</div></div><button class="btn b review-more" id="reviewMore" style="display:none" type="button">ดูรีวิวเพิ่มเติม ↓</button>
 <div class="card" style="margin-top:12px"><b>เขียนรีวิว</b>
 <input id="rn" maxlength="40" placeholder="ชื่อหรือชื่อเล่น (เว้นว่าง = นิรนาม)">
 <textarea id="rt" maxlength="600" placeholder="เล่าประสบการณ์ของคุณ..."></textarea>
@@ -213,11 +213,32 @@ const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 async function upImg(file,dir,max){const blob=await shrink(file,max),p=dir+'/'+crypto.randomUUID()+'.jpg';
  const {error}=await sb.storage.from('shop').upload(p,blob,{contentType:'image/jpeg'});if(error)throw error;
  return sb.storage.from('shop').getPublicUrl(p).data.publicUrl}
+// โหลดข้อมูลร้านและรีวิวแยกกัน เพื่อให้ข้อผิดพลาดส่วนหนึ่งไม่ทำให้ส่วนอื่นหาย
+let reviewLoading=false;
+async function loadPublicReviews(){
+ if(reviewLoading)return;
+ reviewLoading=true;
+ try{
+  const {data,error}=await sb.from('reviews').select('id,name,text,img').eq('status','approved').order('created_at',{ascending:false}).limit(1000);
+  if(error)throw error;
+  showReviews(data||[]);
+  // การโหลดไลก์ล้มเหลวต้องไม่ทำให้รีวิวหาย
+  loadLikeCounts().catch(e=>console.warn('โหลดไลก์:',e));
+ }catch(e){
+  console.error('โหลดรีวิวจาก Supabase ไม่สำเร็จ:',e);
+  const msg=e&&e.message?e.message:'การเชื่อมต่อมีปัญหา';
+  $('rv').innerHTML='<div class="card"><b>ไม่สามารถโหลดรีวิวได้</b><div class="note" style="margin:8px 0">'+esc(msg)+'</div><button type="button" class="btn b" id="retryReviews">ลองโหลดรีวิวอีกครั้ง</button></div>';
+  $('reviewMore').style.display='none';
+  $('retryReviews').onclick=loadPublicReviews;
+ }finally{reviewLoading=false}
+}
 async function loadSite(){
- const [s,r]=await Promise.all([sb.from('settings').select('data').eq('id',1).maybeSingle(),
-  sb.from('reviews').select('id,name,text,img').eq('status','approved').order('created_at',{ascending:false}).limit(1000)]);
- const d=(s.data&&s.data.data)||{};S={...D,...d,c:{...D.c,...(d.c||{})}};render();showReviews(r.data||[]);await loadLikeCounts()}
-loadSite().catch(e=>{console.error('Supabase connection:',e);showReviews([])});
+ const {data,error}=await sb.from('settings').select('data').eq('id',1).maybeSingle();
+ if(error){console.warn('โหลดข้อมูลร้านไม่สำเร็จ:',error.message)}
+ else{const d=(data&&data.data)||{};S={...D,...d,c:{...D.c,...(d.c||{})}};render()}
+ await loadPublicReviews();
+}
+loadSite().catch(e=>{console.error('Supabase connection:',e);loadPublicReviews()});
 trackVisitor().catch(e=>{console.warn(e);$('visitorCounter').textContent='👀 ไม่สามารถแสดงยอดผู้เข้าชมได้'});
 document.addEventListener('click',e=>{const t=e.target,l=$('lb');if(t.dataset&&t.dataset.zoom!==undefined){l.innerHTML='<img src="'+t.src+'" alt="">';l.style.display='flex'}else if(l.contains(t)||t===l)l.style.display='none'});
 $('rs').onclick=async()=>{
