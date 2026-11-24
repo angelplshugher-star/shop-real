@@ -48,6 +48,10 @@ footer .note a{cursor:pointer;text-decoration:underline}
 #adm .in{background:#fff;max-width:560px;margin:0 auto;padding:16px;min-height:100%;color:#2a2a2a}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .pend{border:1px solid #ccc;border-radius:12px;padding:10px;margin:8px 0;font-size:14px}.pend img{max-width:100%;max-height:120px;display:block;margin:6px 0}
+
+.gal{align-items:center;overscroll-behavior-x:contain;scrollbar-width:thin}.gal.single{justify-content:center}.gal img{max-width:90%;object-fit:contain}.gal.single img{width:auto;height:auto;max-height:520px;max-width:100%}.gal-controls{display:flex;justify-content:center;align-items:center;gap:12px;margin-bottom:12px}.gal-controls[hidden]{display:none}
+#musicToggle{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:8;min-width:48px;min-height:48px;box-shadow:0 4px 16px #0002;background:var(--pink)}#musicToggle[hidden]{display:none}
+#lb{flex-direction:column;gap:12px;cursor:default}#lb img{max-height:75vh;object-fit:contain}#lb .zoom-controls{display:flex;gap:12px;align-items:center;color:white}#lb .zoom-close{position:absolute;top:16px;right:16px}
 </style></head><body>
 <div class="wrap">
 <div class="hero"><span class="star" style="left:8%;top:40px">★</span><span class="star" style="right:10%;top:90px">✦</span>
@@ -58,7 +62,7 @@ footer .note a{cursor:pointer;text-decoration:underline}
 <div class="meta" id="bio"></div><div class="meta" id="hrs"></div></div></div></section>
 <section id="book"><h2>ระบบจองคิว</h2><ol class="steps" id="steps"></ol><div id="bk" style="margin-top:14px"></div></section>
 <section id="holSec" style="display:none"><h2>ตารางวันหยุด</h2><div id="holBox"></div></section>
-<section><h2>แพ็กเกจ & ราคา</h2><div class="gal" id="gal"></div><div class="pk" id="pk"></div></section>
+<section><h2>แพ็กเกจ & ราคา</h2><div class="gal" id="gal"></div><div class="gal-controls" id="galControls" hidden><button class="btn" id="galPrev" type="button" aria-label="รูปก่อนหน้า">‹</button><span class="note" id="galCount"></span><button class="btn" id="galNext" type="button" aria-label="รูปถัดไป">›</button></div><div class="pk" id="pk"></div></section>
 <section><h2>รีวิวจากลูกค้า</h2><div class="rv" id="rv"><div class="note">กำลังโหลดรีวิว...</div></div><button class="btn b review-more" id="reviewMore" style="display:none" type="button">ดูรีวิวเพิ่มเติม ↓</button>
 <div class="card" style="margin-top:12px"><b>เขียนรีวิว</b>
 <input id="rn" maxlength="40" placeholder="ชื่อหรือชื่อเล่น (เว้นว่าง = นิรนาม)">
@@ -67,7 +71,7 @@ footer .note a{cursor:pointer;text-decoration:underline}
 <div class="note" id="rm">รีวิวจะแสดงหลังแอดมินอนุมัติ</div></div></section>
 <section><h2>ติดต่อร้าน</h2><div class="ctas" id="ct"></div></section>
 </div>
-<div id="lb"></div><div id="hb"></div>
+<button id="musicToggle" class="btn" type="button" hidden aria-label="เปิดเพลง" aria-pressed="false">♫ เปิดเพลง</button><audio id="siteMusic" loop preload="none"></audio><div id="lb" role="dialog" aria-label="ดูภาพขนาดใหญ่" aria-modal="true"></div><div id="hb"></div>
 <footer><b id="ftn"></b><div class="meta" id="ftt"></div><div class="ctas" id="ftl" style="max-width:420px;margin:12px auto"></div>
 <div class="visitor-counter" id="visitorCounter">👀 กำลังโหลดจำนวนผู้เข้าชม...</div><div class="note">© <span id="yr"></span> · <a id="ab">หลังบ้าน</a></div></footer>
 
@@ -97,8 +101,10 @@ footer .note a{cursor:pointer;text-decoration:underline}
 <label>การแสดงผล<select id="a_holMode"><option value="off">ปิด (ไม่แสดงในเว็บ)</option><option value="text">แสดงเป็นข้อความ</option><option value="calendar">แสดงเป็นปฏิทิน + ข้อความ</option></select></label>
 <label>วันหยุด (1 บรรทัดต่อ 1 รายการ: วันที่ | หมายเหตุ)<textarea id="a_hol" style="min-height:110px"></textarea></label>
 <div class="note">วันที่เป็น ค.ศ. แบบ ปี-เดือน-วัน เช่น 2026-12-31 | หยุดส่งท้ายปี<br>หยุดหลายวัน: 2026-12-30..2026-12-31 | ไปเที่ยว</div>
-<label>รูปแบบแพ็กเกจ<select id="a_pkMode"><option value="text">ข้อความล้วน</option><option value="images">ภาพเลื่อนดู</option><option value="both">ภาพ แล้วตามด้วยข้อความ</option></select></label>
+<label>รูปแบบแพ็กเกจ<select id="a_pkMode"><option value="text">ข้อความล้วน</option><option value="images">รูปภาพอย่างเดียว (รูปเดียวหรือหลายรูป)</option><option value="both">ข้อความและรูปภาพ</option></select></label>
 <label>ภาพแพ็กเกจ (เลือกได้หลายรูป)<input type="file" id="a_pf" accept="image/*" multiple></label><div id="a_pl" class="row2"></div>
+<div class="note">เลือกรูปเดียวเพื่อแสดงภาพเดี่ยว หรือหลายรูปเพื่อปัดซ้าย–ขวา กดภาพเพื่อดูขนาดใหญ่</div><div class="note" id="packageMsg"></div>
+<h3>เพลงประกอบเว็บไซต์</h3><label>แสดงปุ่มเพลง<select id="a_musicEnabled"><option value="off">ปิด</option><option value="on">เปิด</option></select></label><label>ลิงก์ไฟล์เพลง HTTPS (MP3 หรือ M4A)<input id="a_musicUrl" type="url" placeholder="https://.../music.mp3"></label><label>หรืออัปโหลดเพลง MP3 / M4A (ไม่เกิน 10 MB)<input id="a_musicFile" type="file" accept=".mp3,.m4a,audio/mpeg,audio/mp4"></label><button type="button" class="btn" id="musicRemove">นำเพลงออก</button><div class="note" id="musicMsg">เพลงเริ่มเล่นเมื่อผู้ชมกดปุ่มเท่านั้น</div>
 <label>ข้อความฟุตเตอร์<textarea id="a_ft"></textarea></label>
 <h3>สีและฟอนต์</h3>
 <div class="row2"><label>พื้นหลัง 1<input type="color" id="c_bg1"></label><label>พื้นหลัง 2<input type="color" id="c_bg2"></label>
@@ -114,7 +120,7 @@ bio:"หมอดูสายมูออนไลน์ ตอบตรง ไ�
 steps:"จองคิวและโอนเงิน\nได้รับคิวพร้อมสลิปยืนยัน\nรับคำทำนายในเวลา 21:00 น. หรือ 23:00 น. ของวันนั้น",
 pk:"ดูดวงด่วน | 199 | 1 คำถาม ตอบภายใน 15 นาที\nดูดวงเต็ม | 499 | ความรัก การงาน การเงิน\nรายปี | 999 | ดวงรายเดือนตลอดปี + ข้อแนะนำ",
 ct:"Instagram | https://instagram.com\nLine | https://line.me\nInbox | https://m.me",
-c:{bg1:"#d9f0f4",bg2:"#fff5f8",pink:"#ffc2d6",blue:"#bfe6ee",green:"#d3e3a0",ink:"#2a2a2a"},font:"Mali",holMode:"off",hol:"2026-12-31 | หยุดส่งท้ายปี\n2027-01-01 | หยุดวันขึ้นปีใหม่",conMode:"buttons",bookMode:"buttons",bookings:[{p:"line",l:"จองคิวทาง LINE",v:"@yourshop"},{p:"x",l:"จองคิวทาง X",v:"yourshop"}],contacts:[{p:"instagram",l:"",v:"yourshop"},{p:"line",l:"",v:"@yourshop"},{p:"x",l:"",v:"yourshop"}],pkMode:"text",pkImgs:[],ft:"ขอบคุณที่แวะมานะคะ ✨ คำทำนายเป็นเพียงแนวทาง โปรดใช้วิจารณญาณประกอบการตัดสินใจ"};
+c:{bg1:"#d9f0f4",bg2:"#fff5f8",pink:"#ffc2d6",blue:"#bfe6ee",green:"#d3e3a0",ink:"#2a2a2a"},font:"Mali",holMode:"off",hol:"2026-12-31 | หยุดส่งท้ายปี\n2027-01-01 | หยุดวันขึ้นปีใหม่",conMode:"buttons",bookMode:"buttons",bookings:[{p:"line",l:"จองคิวทาง LINE",v:"@yourshop"},{p:"x",l:"จองคิวทาง X",v:"yourshop"}],contacts:[{p:"instagram",l:"",v:"yourshop"},{p:"line",l:"",v:"@yourshop"},{p:"x",l:"",v:"yourshop"}],pkMode:"text",pkImgs:[],musicEnabled:"off",musicUrl:"",ft:"ขอบคุณที่แวะมานะคะ ✨ คำทำนายเป็นเพียงแนวทาง โปรดใช้วิจารณญาณประกอบการตัดสินใจ"};
 let S=JSON.parse(JSON.stringify(D)),galAll=false,imgs=[];
 let approvedReviews=[],reviewExpanded=false,likeCounts={};
 const visitorKey='shop_real_visitor_id_v1';
@@ -171,12 +177,24 @@ function render(){
  const cls=['p','b','g'];
  $('ct').innerHTML=S.conMode==='hub'?'<button class="btn p" data-hub>💬 ช่องทางติดต่อทั้งหมด</button>':conBtns();
  $('ftl').innerHTML=$('ct').innerHTML;drawHol();drawBook();
- $('pk').style.display=(S.pkMode==='images'&&(S.pkImgs||[]).length)?'none':'grid';drawGal();
+ $('pk').style.display=S.pkMode==='images'?'none':'grid';drawGal();syncMusic();
 }
-function drawGal(){const im=S.pkImgs||[],g=$('gal');g.style.display=(S.pkMode!=='text'&&im.length)?'flex':'none';
- const v=galAll?im:im.slice(0,4);
- g.innerHTML=v.map(u=>`<img data-zoom src="${esc(u)}" alt="" loading="lazy">`).join('')+(!galAll&&im.length>4?`<button class="btn p more" id="gm">ดูเพิ่มเติม<br>+${im.length-4}</button>`:'');
- const b=$('gm');if(b)b.onclick=()=>{galAll=true;drawGal()}}
+function packageImages(){return Array.isArray(S.pkImgs)?S.pkImgs.filter(u=>typeof u==='string'&&u):[]}
+function drawGal(){const im=packageImages(),g=$('gal'),active=S.pkMode!=='text';g.classList.toggle('single',im.length===1);g.style.display=active&&im.length?'flex':'none';$('galControls').hidden=!active||im.length<2;g.innerHTML=active?im.map((u,i)=>`<img data-package-index="${i}" data-zoom src="${esc(u)}" alt="ภาพแพ็กเกจ ${i+1}" loading="lazy">`).join(''):'';g.scrollLeft=0;updateGalCount()}
+function updateGalCount(){const g=$('gal'),a=[...g.querySelectorAll('img')];if(!a.length)return;const i=a.reduce((best,x,j)=>Math.abs(x.offsetLeft-a[0].offsetLeft-g.scrollLeft)<Math.abs(a[best].offsetLeft-a[0].offsetLeft-g.scrollLeft)?j:best,0);$('galCount').textContent=`${i+1} / ${a.length}`;$('galPrev').disabled=i===0;$('galNext').disabled=i===a.length-1||g.scrollLeft+g.clientWidth>=g.scrollWidth-2}
+function moveGal(dir){const g=$('gal');g.scrollBy({left:dir*Math.max(150,g.clientWidth*.65),behavior:'smooth'})}
+$('galPrev').onclick=()=>moveGal(-1);$('galNext').onclick=()=>moveGal(1);$('gal').addEventListener('scroll',updateGalCount,{passive:true});
+let zoomImages=[],zoomIndex=0,zoomStart=0;
+function openZoom(images,i){zoomImages=images;zoomIndex=i;drawZoom();$('lb').style.display='flex'}
+function drawZoom(){const l=$('lb');l.innerHTML=`<button type="button" class="btn zoom-close" data-zoom-close aria-label="ปิดภาพ">✕</button><img src="${esc(zoomImages[zoomIndex])}" alt="ภาพขนาดใหญ่">${zoomImages.length>1?`<div class="zoom-controls"><button class="btn" data-zoom-dir="-1" aria-label="รูปก่อนหน้า">‹</button><span>${zoomIndex+1} / ${zoomImages.length}</span><button class="btn" data-zoom-dir="1" aria-label="รูปถัดไป">›</button></div>`:''}`}
+function stepZoom(d){if(zoomImages.length>1){zoomIndex=(zoomIndex+d+zoomImages.length)%zoomImages.length;drawZoom()}}
+function closeZoom(){$('lb').style.display='none'}
+$('lb').addEventListener('touchstart',e=>{zoomStart=e.changedTouches[0].clientX},{passive:true});$('lb').addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-zoomStart;if(Math.abs(dx)>45)stepZoom(dx<0?1:-1)},{passive:true});
+document.addEventListener('keydown',e=>{if($('lb').style.display!=='flex')return;if(e.key==='Escape')closeZoom();if(e.key==='ArrowLeft')stepZoom(-1);if(e.key==='ArrowRight')stepZoom(1)});
+function validMusicUrl(v){try{const u=new URL(String(v||'').trim());return u.protocol==='https:'?u.href:''}catch{return ''}}
+function musicLabel(){const playing=!$('siteMusic').paused,b=$('musicToggle');b.textContent=playing?'♫ ปิดเพลง':'♫ เปิดเพลง';b.setAttribute('aria-pressed',String(playing));b.setAttribute('aria-label',playing?'ปิดเพลง':'เปิดเพลง')}
+function syncMusic(){const a=$('siteMusic'),b=$('musicToggle'),url=validMusicUrl(S.musicUrl),enabled=S.musicEnabled==='on'&&!!url;b.hidden=!enabled;if(!enabled){a.pause();a.removeAttribute('src');a.load()}else if(a.getAttribute('src')!==url){a.pause();a.src=url}musicLabel()}
+$('siteMusic').addEventListener('play',musicLabel);$('siteMusic').addEventListener('pause',musicLabel);$('musicToggle').onclick=async()=>{const a=$('siteMusic');if(!a.paused){a.pause();return}try{await a.play()}catch(e){musicLabel();alert('เปิดเพลงไม่ได้ กรุณาตรวจสอบลิงก์ไฟล์เพลง')}};
 function showReviews(l){
  approvedReviews=l||[];
  const visible=reviewExpanded?approvedReviews:approvedReviews.slice(0,6);
@@ -240,7 +258,7 @@ async function loadSite(){
 }
 loadSite().catch(e=>{console.error('Supabase connection:',e);loadPublicReviews()});
 trackVisitor().catch(e=>{console.warn(e);$('visitorCounter').textContent='👀 ไม่สามารถแสดงยอดผู้เข้าชมได้'});
-document.addEventListener('click',e=>{const t=e.target,l=$('lb');if(t.dataset&&t.dataset.zoom!==undefined){l.innerHTML='<img src="'+t.src+'" alt="">';l.style.display='flex'}else if(l.contains(t)||t===l)l.style.display='none'});
+document.addEventListener('click',e=>{const t=e.target,l=$('lb');if(t.dataset&&t.dataset.zoom!==undefined){if(t.dataset.packageIndex!==undefined)openZoom(packageImages(),Number(t.dataset.packageIndex));else openZoom([t.src],0)}else if(t.closest('[data-zoom-close]')||t===l)closeZoom();else if(t.closest('[data-zoom-dir]'))stepZoom(Number(t.closest('[data-zoom-dir]').dataset.zoomDir))});
 $('rs').onclick=async()=>{
  const t=$('rt').value.trim();if(!t)return;$('rs').disabled=true;
  try{const f=$('rf').files[0],img=f?await upImg(f,'reviews',900):'';
@@ -254,7 +272,7 @@ document.addEventListener('click',e=>{const hb=$('hb');if(e.target===hb){hb.styl
  else if(t.dataset.hbx!==undefined)hb.style.display='none';
  else{const bk=t.dataset.hub==='book';hb.innerHTML='<div class="card"><h2 style="margin-top:0">'+(bk?'จองคิวผ่านช่องทางไหนดี':'ช่องทางติดต่อ')+'</h2><div style="display:grid;gap:10px">'+(conBtns(bk?(Array.isArray(S.bookings)?S.bookings:D.bookings):undefined)||'<div class="note">ยังไม่มีช่องทางติดต่อ</div>')+'</div><button class="btn" data-hbx style="margin-top:12px;width:100%">ปิด</button></div>';hb.style.display='flex'}});
 // ---- admin ----
-const F=['name','logo','h1','sub','bio','hrs','st','stt','steps','pk','pkMode','ft','holMode','hol','conMode','bookMode'];
+const F=['name','logo','h1','sub','bio','hrs','st','stt','steps','pk','pkMode','ft','holMode','hol','conMode','bookMode','musicEnabled','musicUrl'];
 $('ab').onclick=async()=>{$('adm').style.display='block';const {data}=await sb.auth.getSession();
  if(data.session)openPanel();else{$('lg').style.display='block';$('pn').style.display='none'}};
 $('ax').onclick=()=>$('adm').style.display='none';
@@ -265,7 +283,11 @@ function openPanel(){$('lg').style.display='none';$('pn').style.display='block';
  F.forEach(k=>$('a_'+k).value=S[k]);for(const k in S.c)$('c_'+k).value=S.c[k];$('a_font').value=S.font;
  imgs=[...(S.pkImgs||[])];cons=(Array.isArray(S.contacts)?S.contacts:D.contacts).map(c=>({...c}));drawCon();bks=(Array.isArray(S.bookings)?S.bookings:D.bookings).map(c=>({...c}));drawBk();drawAdm();loadRev()}
 $('a_lf').onchange=async e=>{if(e.target.files[0])try{$('a_logo').value=await upImg(e.target.files[0],'site',500)}catch{$('sm').textContent='อัปโหลดไม่สำเร็จ'}};
-$('a_pf').onchange=async e=>{for(const f of e.target.files)try{imgs.push(await upImg(f,'site',1000))}catch{$('sm').textContent='อัปโหลดบางรูปไม่สำเร็จ'}e.target.value='';drawAdm()};
+let pendingUploads=0;
+function uploadBusy(delta){pendingUploads+=delta;$('sv').disabled=pendingUploads>0}
+$('a_pf').onchange=async e=>{const input=e.target,files=[...input.files];if(!files.length)return;uploadBusy(1);input.disabled=true;$('packageMsg').textContent='กำลังอัปโหลดรูป...';let failed=0;try{for(const f of files)try{imgs.push(await upImg(f,'site',1600))}catch(err){failed++;console.warn(err)}drawAdm();$('packageMsg').textContent=failed?`อัปโหลดไม่สำเร็จ ${failed} รูป กรุณาลองใหม่`:'อัปโหลดแล้ว กดบันทึกทั้งหมดเพื่อเผยแพร่'}finally{input.value='';input.disabled=false;uploadBusy(-1)}};
+$('a_musicFile').onchange=async e=>{const input=e.target,f=input.files[0];if(!f)return;if(f.size>10*1024*1024||!/\.(mp3|m4a)$/i.test(f.name)){ $('musicMsg').textContent='กรุณาเลือก MP3 หรือ M4A ไม่เกิน 10 MB';input.value='';return}uploadBusy(1);input.disabled=true;$('musicMsg').textContent='กำลังอัปโหลดเพลง...';try{const ext=f.name.split('.').pop().toLowerCase(),path='site/music-'+crypto.randomUUID()+'.'+ext;const {error}=await sb.storage.from('shop').upload(path,f,{contentType:ext==='mp3'?'audio/mpeg':'audio/mp4'});if(error)throw error;$('a_musicUrl').value=sb.storage.from('shop').getPublicUrl(path).data.publicUrl;$('a_musicEnabled').value='on';$('musicMsg').textContent='อัปโหลดแล้ว กดบันทึกทั้งหมดเพื่อเผยแพร่'}catch(err){$('musicMsg').textContent='อัปโหลดเพลงไม่สำเร็จ: '+err.message+' (สามารถใช้ลิงก์ไฟล์เพลง HTTPS แทนได้)'}finally{input.value='';input.disabled=false;uploadBusy(-1)}};
+$('musicRemove').onclick=()=>{$('a_musicUrl').value='';$('a_musicEnabled').value='off';$('musicMsg').textContent='นำเพลงออกจากหน้าเว็บเมื่อกดบันทึกทั้งหมด'};
 function drawCon(){drawList(cons,$('a_cl'),drawCon)}
 function drawBk(){drawList(bks,$('a_bl'),drawBk)}
 function drawList(arr,l,redraw){l.innerHTML='';arr.forEach((c,i)=>{const w=document.createElement('div');w.className='pend';
@@ -279,8 +301,8 @@ function drawList(arr,l,redraw){l.innerHTML='';arr.forEach((c,i)=>{const w=docum
 $('a_ca').onclick=()=>{cons.push({p:'line',l:'',v:''});drawCon()};
 $('a_ba').onclick=()=>{bks.push({p:'line',l:'',v:''});drawBk()};
 function drawAdm(){const l=$('a_pl');l.innerHTML='';imgs.forEach((u,i)=>{const w=document.createElement('div'),m=document.createElement('img'),x=document.createElement('button');m.src=u;m.style.cssText='width:100%;height:90px;object-fit:cover;border-radius:8px';x.className='btn';x.textContent='ลบ';x.onclick=()=>{imgs.splice(i,1);drawAdm()};w.append(m,x);l.append(w)})}
-$('sv').onclick=async()=>{const o={c:{}};F.forEach(k=>o[k]=$('a_'+k).value);for(const k in D.c)o.c[k]=$('c_'+k).value;o.font=$('a_font').value;o.pkImgs=imgs;o.contacts=cons.filter(c=>String(c.v||'').trim());o.bookings=bks.filter(c=>String(c.v||'').trim());
- const {error}=await sb.from('settings').upsert({id:1,data:o});
+$('sv').onclick=async()=>{if(pendingUploads)return;if($('a_musicEnabled').value==='on'&&!validMusicUrl($('a_musicUrl').value)){$('musicMsg').textContent='กรุณาใส่ลิงก์เพลง HTTPS หรืออัปโหลดเพลงก่อน';return}const o={c:{}};F.forEach(k=>o[k]=$('a_'+k).value);for(const k in D.c)o.c[k]=$('c_'+k).value;o.font=$('a_font').value;o.pkImgs=imgs;o.contacts=cons.filter(c=>String(c.v||'').trim());o.bookings=bks.filter(c=>String(c.v||'').trim());
+ const {error}=await sb.from('settings').upsert({id:1,data:{...S,...o}});
  if(error){$('sm').textContent='บันทึกไม่สำเร็จ: '+error.message;return}S={...D,...o};render();$('sm').textContent='บันทึกแล้ว ✓'};
 async function loadRev(){const {data:l,error}=await sb.from('reviews').select('*').order('created_at',{ascending:false});
  if(error){$('pl').textContent='โหลดรีวิวไม่สำเร็จ';return}$('pl').innerHTML=l.length?'':'ยังไม่มีรีวิว';
