@@ -156,6 +156,7 @@ function parseHol(t){const o=[];lines(t).forEach(l=>{const i=l.indexOf('|'),d=(i
  o.push({from:a,to:b,note:n,days})});return o.sort((p,q)=>p.from<q.from?-1:1)}
 function drawBook(){const el=$('bk'),m=S.bookMode||'buttons';if(m==='off'){el.innerHTML='';return}
  el.innerHTML=m==='hub'?'<button class="btn p" data-hub="book">📅 จองคิวเลย</button>':'<div class="ctas">'+conBtns(Array.isArray(S.bookings)?S.bookings:D.bookings)+'</div>'}
+let holidayExpanded=false;
 function drawHol(){const sec=$('holSec');if(!S.holMode||S.holMode==='off'){sec.style.display='none';return}
  sec.style.display='block';const H=parseHol(S.hol),map={};H.forEach(h=>h.days.forEach(d=>map[d]=1));let h='';
  if(S.holMode==='calendar'){const f=new Date(cy,cm,1),n=new Date(cy,cm+1,0).getDate(),p=v=>String(v).padStart(2,'0');
@@ -163,8 +164,12 @@ function drawHol(){const sec=$('holSec');if(!S.holMode||S.holMode==='off'){sec.s
   for(let d=1;d<=n;d++)h+=`<span class="${map[cy+'-'+p(cm+1)+'-'+p(d)]?'off':''}">${d}</span>`;
   h+='</div><div class="note" style="margin-top:8px"><span class="dot"></span> = วันหยุด</div></div>'}
  const t=ymd(new Date()),up=H.filter(x=>x.to>=t);
- h+=up.length?up.map(x=>`<div class="card" style="margin-bottom:8px"><b>${fmtD(x.from)}${x.to!==x.from?' – '+fmtD(x.to):''}</b><div class="meta">${esc(x.note||'หยุดทำการ')}</div></div>`).join(''):'<div class="note">ยังไม่มีวันหยุดที่ประกาศไว้ เปิดทำการตามปกติ</div>';
- $('holBox').innerHTML=h}
+ const visible=holidayExpanded?up:up.slice(0,2);
+ h+=up.length?visible.map(x=>`<div class="card" style="margin-bottom:8px"><b>${fmtD(x.from)}${x.to!==x.from?' – '+fmtD(x.to):''}</b><div class="meta">${esc(x.note||'หยุดทำการ')}</div></div>`).join(''):'<div class="note">ยังไม่มีวันหยุดที่ประกาศไว้ เปิดทำการตามปกติ</div>';
+ if(up.length>2)h+=`<button type="button" class="btn b" id="holidayMore" aria-expanded="${holidayExpanded}" style="display:block;margin:12px auto 0">${holidayExpanded?'ย่อรายการวันหยุด ↑':'ดูวันหยุดทั้งหมด ('+up.length+') ↓'}</button>`;
+ $('holBox').innerHTML=h;
+ const more=$('holidayMore');if(more)more.onclick=()=>{holidayExpanded=!holidayExpanded;drawHol();const next=$('holidayMore');if(next){next.focus({preventScroll:true});if(!holidayExpanded)next.scrollIntoView({block:'nearest'})}};
+}
 function render(){
  const r=document.documentElement.style,c=S.c;for(const k in c)r.setProperty('--'+k,c[k]);r.setProperty('--font',`'${S.font}'`);
  document.title=S.name;$('tag').textContent=S.sub;$('h1').textContent=S.h1;
